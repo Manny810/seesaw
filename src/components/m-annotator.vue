@@ -54,7 +54,9 @@ export default {
                 paper: null, 
                 imdata : this.initial_imdata,  
                 show_activation : false,
-                activation_paths : []}
+                activation_paths : [], 
+                active_layer : null, 
+                activation_layer : null,}
   },
   created : function (){
       console.log('created annotator')
@@ -63,9 +65,8 @@ export default {
         this.paper = new paper.PaperScope();
         new paper.Tool(); // also implicitly adds tool to paper scope
         console.log('mounted annotator')
-
-        this.paper2 = new paper.PaperScope(); 
-        new paper.Tool(); 
+        
+        
         
   },
   methods : {
@@ -89,12 +90,13 @@ export default {
         container.style.setProperty('height', height + 'px')
         img.style.setProperty('display', 'block')
 
-        let paper = this.paper2;
-        let cnv = this.$refs.canvas;
-        cnv.height = height;
-        cnv.width = width;
-        paper.setup(cnv);
+        let paper = this.paper;
         paper.view.draw();
+
+        this.active_layer = this.paper.project.activeLayer;
+        this.activation_layer = new this.paper.Layer();  
+
+        this.activation_layer.activate(); 
 
         var activation = this.imdata.activation; 
         var activation = [[.5, .2, 0], 
@@ -115,7 +117,8 @@ export default {
         } 
         
         paper.view.draw();
-        paper.view.update();
+        paper.view.update(); 
+        this.active_layer.activate(); 
       
     }, 
     clear_activation: function(){
@@ -123,12 +126,18 @@ export default {
             var path = this.activation_paths.pop(); 
             path.remove();
         }
+        if (this.activation_layer !== null){
+            this.activation_layer.remove(); 
+            this.activation_layer = null;
+        }
     }, 
     rescale_box : function(box, height_scale, width_scale) {
           let {x1,x2,y1,y2} = box;
           return {x1:x1*width_scale, x2:x2*width_scale, y1:y1*height_scale, y2:y2*height_scale};
     },
     save : function() {
+        this.clear_activation(); 
+
         let paper = this.paper
         let boxes = (paper.project.getItems({className:'Path'})
                           .map(x =>  {let b = x.bounds; return {x1:b.left, x2:b.right, y1:b.top, y2:b.bottom}})
@@ -196,9 +205,12 @@ export default {
         container.style.setProperty('height', height + 'px')
         img.style.setProperty('display', 'block')
 
-        if (this.read_only && (this.initial_imdata.boxes === null || this.initial_imdata.boxes.length === 0)){
-          return;
-        }
+        //if (this.read_only && (this.initial_imdata.boxes === null || this.initial_imdata.boxes.length === 0)){
+        //  return;
+        //}
+        /**
+         * Temporarily commenting out this if statement as I need the paper to be initialized in the beginning
+         */
         // call some code to draw activation array 
         // on top of canvas 
         // ctx
