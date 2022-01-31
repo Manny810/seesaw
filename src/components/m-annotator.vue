@@ -91,7 +91,9 @@ export default {
         let paper = this.paper;
         paper.activate(); 
 
-        this.activation_layer = new paper.Layer()
+        let layer = paper.project.activeLayer; 
+
+        this.activation_layer = new paper.Layer({locked: true}); 
         this.activation_layer.activate(); 
 
         paper.view.draw();
@@ -113,9 +115,11 @@ export default {
                 this.activation_paths.push(r); 
             }
         } 
+
+        layer.activate(); 
         
         paper.view.draw();
-        paper.view.update();
+        paper.view.update();  
       
     }, 
     clear_activation: function(){
